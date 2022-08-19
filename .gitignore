@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+.env
+.serverless/
+.webpack/
+.DS_Store
+_lumigo/
+.esbuild/
+.vscode/

@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  dynamodb:
+    image: amazon/dynamodb-local
+    ports:
+      - 8000:8000
+  sns:
+    image: warrenseine/sns
+    ports:
+      - 9911:9911
+  awscli:
+    image: amazon/aws-cli
+    command: help
+  server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    env_file: .env.test
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/home/node/app
+      - node_modules:/home/node/app/node_modules
+
+
+
+volumes:
+  node_modules:

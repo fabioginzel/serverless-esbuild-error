@@ -1,0 +1,115 @@
+openapi: '3.1.0'
+info:
+  title: api-carteira
+  version: '1.0'
+servers:
+  - url: https://api.server.test/v1
+webhooks:
+  addCredito:
+    post:
+      requestBody:
+        description: Evento temporário para incluir credito
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/movimento"
+      responses:
+        "201":
+          description: Sucesso
+paths:
+  /ack:
+    get:
+      summary: Retorna um ack para saber se a api esta online
+      tags:
+        - Publica
+      operationId: ping
+      description: Retorna ack com a data/hora atual para saber estado da api
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ack
+                properties:
+                  ack:
+                    type: string
+                    example: "1583783005"
+
+  /meu-saldo:
+    get:
+      summary: Retorna o saldo do usuário
+      security:
+        - bearerAuth: [ user ]
+      responses:
+        "200":
+          description: Saldo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/saldo"
+        "400":
+          $ref: "#/components/responses/errorGenerico"
+        "401":
+          $ref: "#/components/responses/errorTokenInvalido"
+        "404":
+          $ref: "#/components/responses/errorNaoEncontrado"
+        "403":
+          $ref: "#/components/responses/errorTokenInvalido"
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    saldo:
+      type: object
+      properties:
+        valor:
+          type: number
+          format: currency
+          readOnly: true
+    movimento:
+      type: object
+      properties:
+        valor:
+          type: number
+          format: currency
+        descricao:
+          type: string
+  responses:
+    errorTokenInvalido:
+      description: Token não encontrado
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              mensagem:
+                description: Mensagem de erro
+                type: string
+                example: Token não encontrado
+    errorDadosInvalidos:
+      description: Dados da requisição são inválidos
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Erros encontrados
+    errorNaoEncontrado:
+      description: Não encontrado
+    errorGenerico:
+      description: Mensagem de erro
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              mensagem:
+                description: Descreve o erro
+                type: string
+                example: Não foi possível fazer isso

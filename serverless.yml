@@ -1,0 +1,100 @@
+service: api-carteira
+
+custom:
+  customDomain:
+    domainName: ${env:URL,'carteira.api.box24x7.com'}
+    stage: ${self:provider.stage}
+    createRoute53Record: true
+    certificateName: "*.api.box24x7.com"
+    autoDomain: true
+  logRetentionInDays: 14
+  esbuild:
+    bundle: true
+    minify: true
+  serverless-offline:
+    host: 0.0.0.0
+  lumigo:
+    token: t_e762bd9ca1cf4c3f81b92
+
+plugins:
+  - serverless-esbuild
+  - serverless-domain-manager
+  - serverless-plugin-log-retention
+  - serverless-offline
+  - serverless-lumigo
+
+
+
+package:
+  individually: true
+
+  
+resources:
+  Resources:
+
+
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: us-east-1
+  timeout: 30
+  memorySize: 512
+  stage: ${opt:stage, 'dev'}
+  lambdaHashingVersion: 20201221
+  environment:
+    NODE_ENV: ${opt:stage, 'dev'}
+    TZ: America/Sao_Paulo
+    LUMIGO_MAX_ENTRY_SIZE: 5000
+    GOOGLE_PRIVATE_KEY: ${env:GOOGLE_PRIVATE_KEY,''}
+    AWS_SNS_TOPIC_ARN: ${env:AWS_SNS_TOPIC_ARN,''}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeStream
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:ListStreams
+        - dynamodb:CreateTable
+        - dynamodb:DescribeTable
+        - dynamodb:BatchWriteItem
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:Query
+      Resource: arn:aws:dynamodb:*:*:table/cobranca
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+      Resource: arn:aws:dynamodb:*:*:table/cobranca/index/*
+    - Effect: Allow
+      Action:
+        - SNS:Publish
+      Resource: arn:aws:sns:*:*:mensageria-box
+    
+
+functions:
+  http:
+    handler: src/interface/http/app.run
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors:
+            maxAge: 86400
+  # sns-incluir-cartao:
+  #   handler: src/interface/sns/handler/IncluirCartao.run
+  #   events:
+  #     - sns:
+  #         arn: arn:aws:sns:us-east-1:736814177976:mensageria-box
+  #         filterPolicy:
+  #           event: 
+  #             - IncluirCartao
+  # sns-cobrar-locacao:
+  #   handler: src/interface/sns/handler/CobrarLocacao.run
+  #   events:
+  #     - sns:
+  #         arn: arn:aws:sns:us-east-1:736814177976:mensageria-box
+  #         filterPolicy:
+  #           event: 
+  #             - LocacaoEncerrada
